@@ -11,6 +11,9 @@ class Easy21:
 		self.RED = -1
 		self.DEALER_THRESH = 17
 		self.state = (0,0)
+		self.HIT = 0
+		self.STICK = 1
+		self.action_space = np.array([self.HIT, self.STICK])
 		#state representation : (player_sum,dealer_showing)
 		#action representation : 0 for hit, 1 for stick (player's actions only, since dealer has fixed policy)
 	def draw_card(self, is_reset = False):
@@ -42,7 +45,8 @@ class Easy21:
 		player_sum, dealer_showing = in_state
 		reward = 0
 		next_state = in_state
-		if in_action == 0: # player calls hit
+		done = False
+		if in_action == self.HIT: # player calls hit
 
 			#draw the card and update player_sum
 			color, value = self.draw_card()
@@ -53,24 +57,24 @@ class Easy21:
 			if self.is_bust(player_sum):
 				reward = -1
 				player_sum = 0
-				dealer_showing = 0 #terminal state
+				dealer_showing = 0 
+				done = True	#terminal state
 			
-		else :
-			#player is going to stick, call dealer policy:
+		else : #player is going to stick, call dealer policy:
 			dealer_sum = dealer_showing
 
 			while dealer_sum < self.DEALER_THRESH and not self.is_bust(dealer_sum):
-				print('DEALER HITS!')
+				# print('DEALER HITS!')
 				#keep hitting until dealer goes bust
 				color, value = self.draw_card()
 				dealer_sum = dealer_sum + color * value
-				print('NEW DEALER SUM = ', dealer_sum)
+				# print('NEW DEALER SUM = ', dealer_sum)
 
 			if self.is_bust(dealer_sum):
 				reward = 1
 				player_sum = 0
 				dealer_showing = 0 #terminal state
-				print('DEALER IS BUST : ', dealer_sum)
+				# print('DEALER IS BUST : ', dealer_sum)
 			else:
 				#give reward based on highest sum:
 				if dealer_sum == player_sum:
@@ -82,12 +86,7 @@ class Easy21:
 			#terminal state
 			player_sum = 0
 			dealer_showing = 0
+			done = True
 
 		next_state = (player_sum, dealer_showing)
-		return next_state, reward
-
-
-env = Easy21()
-state = env.reset()
-print(state)
-print(env.step(state, 1))
+		return next_state, reward, done
