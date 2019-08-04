@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+import pickle
 import numpy as np
 from easy21_env import Easy21
 
@@ -35,7 +37,7 @@ for i in range(N_EVAL_EPS):
 	actions = []
 	while not done:
 		#update no of times state visited
-		print(state)
+		# print(state)
 		N_S[map_state(state)] += 1
 
 		#select action via e greedy:
@@ -66,7 +68,7 @@ for i in range(N_EVAL_EPS):
 	rewards.reverse()
 
 	for reward in rewards:
-		running_sum += reward
+		running_sum += GAMMA * reward
 		g_t.append(running_sum)
 
 	g_t.reverse()
@@ -75,4 +77,25 @@ for i in range(N_EVAL_EPS):
 	for i in range(len(states)):
 		alpha = 1. / N_S_A[map_state(states[i]), actions[i]]
 		q[map_state(states[i]), actions[i]] += alpha * (g_t[i] - q[map_state(states[i]), actions[i]])
-print(np.max(q, axis = 1).reshape((21,10)))
+# print(np.max(q, axis = 1).reshape((21,10)))
+
+with open('./qStarValues.pkl', 'wb') as f:
+	pickle.dump(q,f)
+
+print("Dumped True Qs")
+x = np.arange(0,21)
+y = np.arange(0,10)
+
+X, Y = np.meshgrid(x, y)
+
+Z = np.argmax(q[map_state((X, Y))], axis = 2)
+# print(Z.shape)
+# exit()
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+ax.plot_wireframe(X, Y, Z, color='orange')
+ax.set_xlabel('PLAYER SUM')
+ax.set_ylabel('DEALER SHOWING')
+ax.set_zlabel('Q*(s, a)')
+
+plt.show()
